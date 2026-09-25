@@ -11,23 +11,15 @@ import (
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	file, err := os.Open("index.html")
-	if err != nil {
-		http.Error(w, "Файл не найден", http.StatusNotFound)
-		return
-	}
-	defer file.Close()
-
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	_, err = io.Copy(w, file)
-	if err != nil {
-		http.Error(w, "Ошибка чтения файла", http.StatusInternalServerError)
-		return
-	}
+	http.ServeFile(w, r, "./index.html")
 }
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Метод не поддерживается", http.StatusMethodNotAllowed)
+		return
+	}
+
 	if err := r.ParseMultipartForm(32 << 20); err != nil {
 		http.Error(w, "Ошибка парсинга формы: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -63,12 +55,14 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer newFile.Close()
 
-	_, err = newFile.Write([]byte(result))
-	if err != nil {
+	if _, err := newFile.Write([]byte(result)); err != nil {
 		http.Error(w, "Ошибка записи в файл: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte(result))
+
+	if _, err := w.Write([]byte(result)); err != nil {
+		return
+	}
 }

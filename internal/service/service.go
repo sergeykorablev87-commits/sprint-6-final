@@ -12,17 +12,12 @@ func ConvertAuto(input string) (string, error) {
 		return "", errors.New("empty input")
 	}
 
-	isPureMorse := true
-
-	for _, char := range input {
-		if char != '.' && char != '-' && char != ' ' && char != '\n' && char != '\t' {
-			isPureMorse = false
-			break
-		}
+	isInvalidChar := func(r rune) bool {
+		return r != '.' && r != '-' && r != ' ' && r != '\n' && r != '\t'
 	}
 
-	if isPureMorse {
-		return morse.ToText(input), nil
+	if strings.ContainsFunc(input, isInvalidChar) {
+		return morse.ToMorse(input), nil
 	}
-	return morse.ToMorse(input), nil
+	return morse.ToText(input), nil
 }
